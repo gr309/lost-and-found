@@ -1,7 +1,5 @@
 package com.learn.lostfound.entity;
-
 import java.time.LocalDateTime;
-
 
 import com.learn.lostfound.enums.ItemType;
 import java.time.LocalDate;
@@ -15,6 +13,10 @@ public class Item {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id; 
     
+    @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn (name="user_id", nullable = false)
+    private User user; 
+    
     @Column (nullable=false)
     private String title; 
 
@@ -25,15 +27,12 @@ public class Item {
     @Column (nullable = false)
     private ItemType type; 
 
-    @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn (name="category_id", nullable = false)
-    private Category category; 
-
     @Column(nullable = false)
     private String location;
 
     @Column(nullable = false)
     private LocalDate eventDate;
+
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -46,8 +45,7 @@ public class Item {
         this.eventDate = eventDate;
     }
 
-    public Item() {
-    }
+    public Item() {}
 
     @PrePersist
     public void onCreate() {
@@ -55,6 +53,14 @@ public class Item {
     }
     public Long getId() {
         return id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getTitle() {
@@ -79,14 +85,6 @@ public class Item {
 
     public void setType(ItemType type) {
         this.type = type;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 
     public String getLocation() {

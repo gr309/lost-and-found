@@ -10,8 +10,6 @@ public record ItemResponse(
     String title, 
     String description, 
     ItemType type, 
-    long categoryId, 
-    String categoryName, 
     String location, 
     LocalDate eventDate, 
     LocalDateTime createdAt

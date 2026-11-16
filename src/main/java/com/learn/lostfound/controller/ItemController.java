@@ -3,7 +3,9 @@ package com.learn.lostfound.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import com.learn.lostfound.dto.ItemRequest;
 import com.learn.lostfound.dto.ItemResponse;
@@ -11,8 +13,10 @@ import com.learn.lostfound.service.ItemService;
 
 import jakarta.validation.Valid;
 
+
+
 @RestController
-@RequestMapping("/api/items")
+@RequestMapping("/api/items/")
 public class ItemController {
 
     private final ItemService itemService;
@@ -21,15 +25,36 @@ public class ItemController {
         this.itemService = itemService;
     }
 
-    @GetMapping
+    @GetMapping("/")
     public List<ItemResponse> getItems() {
         return itemService.getAllItems();
     }
 
-    @PostMapping
+    @GetMapping("{id}/")
+    public ItemResponse getItem(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        return itemService.getItems(id);
+    }
+    
+
+    @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
-    public ItemResponse createItem(@Valid @RequestBody ItemRequest request) 
-    {
-        return itemService.createItem(request);
+    public ItemResponse createItem(@Valid @RequestBody ItemRequest request, @AuthenticationPrincipal Jwt jwt) {
+        Long userId = Long.valueOf(jwt.getSubject()); 
+        return itemService.createItem(request, userId);
+    }
+
+    @PutMapping("{id}/")
+    public ItemResponse updatedItem(@PathVariable Long id, @Valid @RequestBody ItemRequest request, @AuthenticationPrincipal Jwt jwt) {
+        Long userId = Long.valueOf(jwt.getSubject());
+
+        return itemService.updateItem(id, request, userId); 
+    }
+
+    @DeleteMapping ("{id}/")
+    @ResponseStatus (HttpStatus.NO_CONTENT)
+    public void deleteItem(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        Long userId = Long.valueOf(jwt.getSubject()); 
+        itemService.deleteItem(id, userId);
+
     }
 }

@@ -20,8 +20,6 @@ public record ItemRequest (
     @NotNull 
     ItemType type, 
 
-    @NotNull 
-    Long categoryId, 
     
     @NotBlank
     String location,
