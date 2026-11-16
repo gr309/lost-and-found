@@ -7,8 +7,6 @@ import com.learn.lostfound.service.CategoryService;
 import com.learn.lostfound.entity.Category;
 
 
-
-
 @RestController 
 @RequestMapping ("/api/categories/")
 public class CategoryController {

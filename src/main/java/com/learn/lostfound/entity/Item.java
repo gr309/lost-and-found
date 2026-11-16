@@ -2,10 +2,9 @@ package com.learn.lostfound.entity;
 
 import java.time.LocalDateTime;
 
-import javax.swing.Spring;
 
 import com.learn.lostfound.enums.ItemType;
-
+import java.time.LocalDate;
 import jakarta.persistence.*;
 
 
@@ -31,15 +30,73 @@ public class Item {
     private Category category; 
 
     @Column(nullable = false)
-    private Spring location;
+    private String location;
 
-    @Column (nullable = false, updatable = false)
-    private LocalDateTime createdAt; 
+    @Column(nullable = false)
+    private LocalDate eventDate;
 
-    public Item() {}
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @PrePersist 
+    public LocalDate getEventDate() {
+        return eventDate;
+    }
+
+    public void setEventDate(LocalDate eventDate) {
+        this.eventDate = eventDate;
+    }
+
+    public Item() {
+    }
+
+    @PrePersist
     public void onCreate() {
-        createdAt = LocalDateTime.now(); 
+        createdAt = LocalDateTime.now();
+    }
+    public Long getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public ItemType getType() {
+        return type;
+    }
+
+    public void setType(ItemType type) {
+        this.type = type;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 }
