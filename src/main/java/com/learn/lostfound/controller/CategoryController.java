@@ -1,14 +1,18 @@
 package com.learn.lostfound.controller;
 import java.util.List;
 
-import  org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.learn.lostfound.service.CategoryService;
 import com.learn.lostfound.entity.Category;
+import com.learn.lostfound.service.CategoryService;
 
 
 @RestController 
-@RequestMapping ("/api/categories/")
+@RequestMapping ("/api/categories")
 public class CategoryController {
     private final CategoryService categoryService; 
     
@@ -16,20 +20,15 @@ public class CategoryController {
         this.categoryService = categoryService; 
     }
 
-    @GetMapping("/")
+    @GetMapping
     public List<Category> getCategories() {
-        return categoryService.getAllCategories(); 
-    }
+            return categoryService.getAllCategories();
+        }
+        
 
-    // @GetMapping("/{id}")
-    // public Category getCategory(@PathVariable Long id) {
-    //     return categoryService.get
-    // }
 
-    @PostMapping("/")
+    @PostMapping
     public Category createCategory(@RequestBody Category category) {
         return categoryService.createCategory(category);
-    }
-    
-    
+    } 
 }
