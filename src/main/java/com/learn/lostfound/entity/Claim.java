@@ -22,6 +22,7 @@ public class Claim {
     @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn (name="user_id", nullable = false)
     private User user; 
+    
     @Column(columnDefinition = "TEXT")
     private String description; 
 

@@ -38,14 +38,8 @@ public class ClaimService {
         this.userRepository = userRepository;
     }
 
-    // CREATE CLAIM
     @Transactional
-    public ClaimResponse createClaim(
-        ClaimRequest request,
-        Long userId
-    ) {
-
-        // Find item
+    public ClaimResponse createClaim(ClaimRequest request, Long userId) {
         Item item = itemRepository.findById(request.itemId())
             .orElseThrow(() ->
                 new ResponseStatusException(
@@ -54,15 +48,6 @@ public class ClaimService {
                 )
             );
 
-        // Only FOUND items can be claimed
-        if (item.getType() != ItemType.FOUND) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Only found items can be claimed"
-            );
-        }
-
-        // Cannot claim own item
         if (item.getUser().getId().equals(userId)) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
@@ -70,7 +55,6 @@ public class ClaimService {
             );
         }
 
-        // Find authenticated user
         User user = userRepository.findById(userId)
             .orElseThrow(() ->
                 new ResponseStatusException(
@@ -79,12 +63,7 @@ public class ClaimService {
                 )
             );
 
-        // Prevent duplicate pending claims
-        if (claimRepository.existsByItemIdAndUserIdAndStatus(
-            item.getId(),
-            userId,
-            ClaimStatus.PENDING
-        )) {
+        if (claimRepository.existsByItemIdAndUserIdAndStatus(item.getId(), userId, ClaimStatus.PENDING)) {
             throw new ResponseStatusException(
                 HttpStatus.CONFLICT,
                 "You already have a pending claim for this item"
@@ -104,17 +83,14 @@ public class ClaimService {
         return toResponse(savedClaim);
     }
 
-    // GET MY CLAIMS
     @Transactional(readOnly = true)
     public List<ClaimResponse> getMyClaims(Long userId) {
-
         return claimRepository.findByUserId(userId)
             .stream()
             .map(this::toResponse)
             .toList();
     }
 
-    // APPROVE CLAIM
     @Transactional
     public ClaimResponse approveClaim(Long claimId, Long userId) {
 
@@ -132,7 +108,6 @@ public class ClaimService {
         return toResponse(claimRepository.save(claim));
     }
 
-    // REJECT CLAIM
     @Transactional
     public ClaimResponse rejectClaim(Long claimId, Long userId) {
 
@@ -150,9 +125,7 @@ public class ClaimService {
         return toResponse(claimRepository.save(claim));
     }
 
-    // FIND CLAIM AND VERIFY OWNERSHIP
     private Claim getClaimForReviewer(Long claimId, Long userId) {
-
         Claim claim = claimRepository.findById(claimId)
             .orElseThrow(() ->
                 new ResponseStatusException(
@@ -171,9 +144,7 @@ public class ClaimService {
         return claim;
     }
 
-    // CONVERT ENTITY TO RESPONSE DTO
     private ClaimResponse toResponse(Claim claim) {
-
         return new ClaimResponse(
             claim.getId(),
             claim.getItem().getId(),
