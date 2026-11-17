@@ -1,3 +1,4 @@
+
 package com.learn.lostfound.entity;
 
 import java.time.LocalDateTime;
@@ -7,8 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import com.learn.lostfound.enums.NotificationType;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Id;
 
+@Entity
 @Table(name = "notifications")
 public class Notification {
 
@@ -37,7 +38,7 @@ public class Notification {
     @Column(nullable = false)
     private boolean isRead = false;
 
-    @CreationTimestamp 
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     public Notification() {}
@@ -45,7 +46,6 @@ public class Notification {
     public Long getId() {
         return id;
     }
-
 
     public User getUser() {
         return user;
@@ -105,5 +105,5 @@ public class Notification {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
-    } 
+    }
 }
