@@ -6,7 +6,7 @@ public class AuthResponse {
     public record Signin(
         String accessToken, 
         String tokenType, 
-        long expiresIn
+        String expiresIn
     ){}
     public record UserInfo(
         Long id, 

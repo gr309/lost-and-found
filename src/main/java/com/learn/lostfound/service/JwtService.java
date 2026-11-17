@@ -26,7 +26,7 @@ public class JwtService {
             .issuer("lostfound")
             .subject(user.getId().toString())
             .issuedAt(now)
-            .expiresAt(now.plus(1, ChronoUnit.HOURS))
+            .expiresAt(now.plus(30, ChronoUnit.DAYS))
             .build(); 
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();

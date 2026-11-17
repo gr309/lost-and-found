@@ -6,8 +6,16 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.learn.lostfound.enums.NotificationType;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Table(name = "notifications")
 public class Notification {
@@ -45,7 +53,6 @@ public class Notification {
     public Long getId() {
         return id;
     }
-
 
     public User getUser() {
         return user;

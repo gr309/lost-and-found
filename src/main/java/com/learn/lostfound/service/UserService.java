@@ -82,7 +82,7 @@ public class UserService {
         }
 
         String token = jwtService.generateToken(user); 
-        return new AuthResponse.Signin(token, "Bearer", 3600); 
+        return new AuthResponse.Signin(token, "Bearer", "30 days"); 
     }
 
     public AuthResponse.UserInfo getUserById(Long id) {
