@@ -8,9 +8,9 @@ import com.learn.lostfound.entity.Notification;
 @RestController 
 @RequestMapping("/api/notifications/")
 public class NotificationController {
-    @GetMapping("/")
-    public Notification getNotification() {
+    // @GetMapping("/")
+    // public Notification getNotification() {
         
-    }
+    // }
 
 }

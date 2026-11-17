@@ -1,11 +1,9 @@
-
 | Django ORM                      | Spring Boot JPA | Database relationship |
 | ------------------------------- | --------------- | --------------------- |
 | `ForeignKey`                  | `@ManyToOne`  | Many-to-One           |
 | `OneToOneField`               | `@OneToOne`   | One-to-One            |
 | `ManyToManyField`             | `@ManyToMany` | Many-to-Many          |
 | Reverse ForeignKey relationship | `@OneToMany`  | One-to-Many           |
-
 
 Run
 
@@ -20,3 +18,8 @@ USE lostfound;
 
 show tables;
 DESCRIBE items;
+
+
+set -a
+source .env
+set +a
