@@ -24,16 +24,21 @@ public class ItemService {
     private final FileStorageService fileStorageService;
 
 
-    public ItemService(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemService(ItemRepository itemRepository, UserRepository userRepository, FileStorageService fileStorageService) {
         this.itemRepository = itemRepository;
-        this.userRepository = userRepository; 
+        this.userRepository = userRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     // Create item 
 
 
     @Transactional 
-    public ItemResponse createItem(ItemRequest request,MultipartFile image, Long userId) throws IOException {
+    public ItemResponse createItem(
+        ItemRequest request,
+        MultipartFile image, 
+        Long userId
+    ) throws IOException {
         User user = userRepository.findById(userId)
             .orElseThrow(() ->
                 new ResponseStatusException(
@@ -49,12 +54,11 @@ public class ItemService {
         item.setType(request.type());
         item.setLocation(request.location());
         item.setEventDate(request.eventDate());
-        
+
         if(image != null && !image.isEmpty()) {
-            String imageUrl = fileStorageService.saveImage(image);
+            String imageUrl = fileStorageService.save(image);
             item.setImageUrl(imageUrl);
         }
-
 
         Item savedItem = itemRepository.save(item);
 
@@ -162,6 +166,7 @@ public class ItemService {
             item.getType(),
             item.getLocation(),
             item.getEventDate(),
+            item.getImageUrl(), 
             item.getCreatedAt()
         );
     }

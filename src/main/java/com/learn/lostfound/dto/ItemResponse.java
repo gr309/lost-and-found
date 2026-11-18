@@ -12,5 +12,6 @@ public record ItemResponse(
     ItemType type, 
     String location, 
     LocalDate eventDate, 
+    String imageUrl, 
     LocalDateTime createdAt
 ) {}

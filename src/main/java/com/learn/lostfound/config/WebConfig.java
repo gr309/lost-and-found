@@ -1,12 +1,15 @@
 package com.learn.lostfound.config;
 
+import java.nio.file.Paths;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
 
-@Configuration
-public class WebConfig implements WebMvcConfigurer {
-    @Override
+@Configuration 
+public class WebConfig implements WebMvcConfigurer  {
+    @Override 
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/**").addResourceLocations("file:uploads/");
+        String uploadPath = Paths.get("uploads").toAbsolutePath().normalize().toUri().toString(); 
+        registry.addResourceHandler("/uploads/**").addResourceLocations(uploadPath); 
     }
 }

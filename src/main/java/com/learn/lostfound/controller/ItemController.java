@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping; 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -49,16 +50,28 @@ public class ItemController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public ItemResponse createItem(
-            @Valid @RequestPart("data") ItemRequest request,
-            @RequestPart(value = "image", required = false)
-            MultipartFile image,
+            @Valid @ModelAttribute ItemRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal Jwt jwt
     ) throws IOException {
 
         Long userId = Long.valueOf(jwt.getSubject());
-
         return itemService.createItem(request, image, userId);
     }
+
+
+    // @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // @ResponseStatus(HttpStatus.CREATED)
+    // public ItemResponse createItem(
+    //         @Valid @RequestPart("data") ItemRequest request,
+    //         @RequestPart(value = "image", required = false)
+    //         MultipartFile image,
+    //         @AuthenticationPrincipal Jwt jwt
+    // ) throws IOException {
+
+    //     Long userId = Long.valueOf(jwt.getSubject());
+    //     return itemService.createItem(request, image, userId);
+    // }
 
 
     // @PostMapping("/")

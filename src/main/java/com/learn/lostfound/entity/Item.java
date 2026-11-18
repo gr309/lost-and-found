@@ -49,7 +49,7 @@ public class Item {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name="image_url")
+    @Column()
     private String imageUrl; 
 
     public LocalDate getEventDate() {
