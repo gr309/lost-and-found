@@ -37,7 +37,7 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers(
                     "/",
-                    "/health",
+                    "/health/",
                     "/api/auth/signup/",
                     "/api/auth/signin/"
                 ).permitAll()
@@ -46,7 +46,10 @@ public class SecurityConfig {
                 .requestMatchers(
                     HttpMethod.GET,
                     "/api/items/",
-                    "/api/items/**"
+                    "/api/items/**",
+                    "/api/me/", 
+                    "/api/claims/",
+                    "/api/claims/**"
                 ).permitAll()
 
                 // Other endpoints require authentication
