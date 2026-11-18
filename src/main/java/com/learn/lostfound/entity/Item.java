@@ -1,9 +1,21 @@
 package com.learn.lostfound.entity;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.learn.lostfound.enums.ItemType;
-import java.time.LocalDate;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 
 
 @Entity 
@@ -36,6 +48,9 @@ public class Item {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name="image_url")
+    private String imageUrl; 
 
     public LocalDate getEventDate() {
         return eventDate;
@@ -89,6 +104,15 @@ public class Item {
 
     public String getLocation() {
         return location;
+    }
+
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public void setLocation(String location) {

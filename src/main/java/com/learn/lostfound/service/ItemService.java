@@ -8,16 +8,21 @@ import com.learn.lostfound.dto.ItemResponse;
 import com.learn.lostfound.repository.ItemRepository;
 import com.learn.lostfound.repository.UserRepository;
 import com.learn.lostfound.entity.*;
-
+// import com.learn.lostfound.service.FileStorageService;
+import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.io.IOException;
+
 @Service 
 public class ItemService {
     private final ItemRepository itemRepository; 
     private final UserRepository userRepository; 
+    private final FileStorageService fileStorageService;
+
 
     public ItemService(ItemRepository itemRepository, UserRepository userRepository) {
         this.itemRepository = itemRepository;
@@ -25,8 +30,10 @@ public class ItemService {
     }
 
     // Create item 
+
+
     @Transactional 
-    public ItemResponse createItem(ItemRequest request, Long userId) {
+    public ItemResponse createItem(ItemRequest request,MultipartFile image, Long userId) throws IOException {
         User user = userRepository.findById(userId)
             .orElseThrow(() ->
                 new ResponseStatusException(
@@ -42,11 +49,42 @@ public class ItemService {
         item.setType(request.type());
         item.setLocation(request.location());
         item.setEventDate(request.eventDate());
+        
+        if(image != null && !image.isEmpty()) {
+            String imageUrl = fileStorageService.saveImage(image);
+            item.setImageUrl(imageUrl);
+        }
+
 
         Item savedItem = itemRepository.save(item);
 
         return toResponse(savedItem);
     }
+
+    // @Transactional 
+    // public ItemResponse createItem(ItemRequest request,  Long userId) {
+    //     User user = userRepository.findById(userId)
+    //         .orElseThrow(() ->
+    //             new ResponseStatusException(
+    //                 HttpStatus.UNAUTHORIZED,
+    //                 "User not found"
+    //             )
+    //         );
+    //     Item item = new Item();
+
+    //     item.setUser(user);
+    //     item.setTitle(request.title());
+    //     item.setDescription(request.description());
+    //     item.setType(request.type());
+    //     item.setLocation(request.location());
+    //     item.setEventDate(request.eventDate());
+
+    //     Item savedItem = itemRepository.save(item);
+
+    //     return toResponse(savedItem);
+    // }
+
+
     @Transactional(readOnly = true)
     public List<ItemResponse> getAllItems() {
         return itemRepository.findAll()
