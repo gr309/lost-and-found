@@ -46,3 +46,6 @@ target/
 
 # Logs
 *.log
+
+HELP.md learn.md
+learn.md
