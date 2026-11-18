@@ -33,4 +33,16 @@ build/
 .vscode/
 .env 
 
-.env/
+.env
+.env.*
+!.env.example
+
+# Build output
+target/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
