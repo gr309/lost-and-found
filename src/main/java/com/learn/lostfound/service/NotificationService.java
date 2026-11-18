@@ -16,11 +16,9 @@ import com.learn.lostfound.repository.NotificationRepository;
 
 @Service
 public class NotificationService {
-
     private final NotificationRepository notificationRepository;
 
-    public NotificationService(
-            NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
     }
 

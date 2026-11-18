@@ -13,7 +13,7 @@ import com.learn.lostfound.dto.NotificationResponse;
 import com.learn.lostfound.service.NotificationService;
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/api/notifications/")
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -23,21 +23,16 @@ public class NotificationController {
     }
 
     // Get all notifications of logged-in user
-    @GetMapping
-    public ResponseEntity<List<NotificationResponse>> getNotifications(
-            @AuthenticationPrincipal Jwt jwt) {
-
+    @GetMapping("/")
+    public ResponseEntity<List<NotificationResponse>> getNotifications(@AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getSubject());
 
-        return ResponseEntity.ok(
-                notificationService.getNotifications(userId)
-        );
+        return ResponseEntity.ok(notificationService.getNotifications(userId));
     }
 
     // Get unread notification count
-    @GetMapping("/unread-count")
-    public ResponseEntity<Map<String, Long>> getUnreadCount(
-            @AuthenticationPrincipal Jwt jwt) {
+    @GetMapping("/unread-count/")
+    public ResponseEntity<Map<String, Long>> getUnreadCount(@AuthenticationPrincipal Jwt jwt) {
 
         Long userId = Long.valueOf(jwt.getSubject());
 
@@ -47,10 +42,8 @@ public class NotificationController {
     }
 
     // Mark a notification as read
-    @PatchMapping("/{id}/read")
-    public ResponseEntity<Void> markAsRead(
-            @PathVariable Long id,
-            @AuthenticationPrincipal Jwt jwt) {
+    @PatchMapping("/{id}/read/")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
 
         Long userId = Long.valueOf(jwt.getSubject());
 
@@ -60,9 +53,8 @@ public class NotificationController {
     }
 
     // Mark all notifications as read
-    @PatchMapping("/read-all")
-    public ResponseEntity<Void> markAllAsRead(
-            @AuthenticationPrincipal Jwt jwt) {
+    @PatchMapping("/read-all/")
+    public ResponseEntity<Void> markAllAsRead(@AuthenticationPrincipal Jwt jwt) {
 
         Long userId = Long.valueOf(jwt.getSubject());
 

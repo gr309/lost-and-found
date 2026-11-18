@@ -49,7 +49,9 @@ public class SecurityConfig {
                     "/api/items/**",
                     "/api/me/", 
                     "/api/claims/",
-                    "/api/claims/**"
+                    "/api/claims/**", 
+                    "/api/notifications/", 
+                    "/api/notifications/**" 
                 ).permitAll()
 
                 // Other endpoints require authentication

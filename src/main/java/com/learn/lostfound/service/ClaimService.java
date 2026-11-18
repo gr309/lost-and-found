@@ -16,7 +16,7 @@ import com.learn.lostfound.entity.User;
 
 import com.learn.lostfound.enums.ClaimStatus;
 import com.learn.lostfound.enums.ItemType;
-
+import com.learn.lostfound.enums.NotificationType;
 import com.learn.lostfound.repository.ClaimRepository;
 import com.learn.lostfound.repository.ItemRepository;
 import com.learn.lostfound.repository.UserRepository;
@@ -27,15 +27,18 @@ public class ClaimService {
     private final ClaimRepository claimRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService; 
 
     public ClaimService(
         ClaimRepository claimRepository,
         ItemRepository itemRepository,
-        UserRepository userRepository
+        UserRepository userRepository, 
+        NotificationService notificationService
     ) {
         this.claimRepository = claimRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService; 
     }
 
     @Transactional
@@ -80,6 +83,16 @@ public class ClaimService {
 
         Claim savedClaim = claimRepository.save(claim);
 
+        notificationService.createNotification(
+            item.getUser(), 
+            NotificationType.CLAIM_SUBMITTED, 
+            "New Claim Submmited", 
+            user.getName() + " submitter a claim for you item: " + item.getTitle(), 
+            item.getId(), 
+            savedClaim.getId()
+
+        );
+
         return toResponse(savedClaim);
     }
 
@@ -104,8 +117,18 @@ public class ClaimService {
         }
 
         claim.setStatus(ClaimStatus.APPROVED);
+        Claim savedClaim = claimRepository.save(claim); 
 
-        return toResponse(claimRepository.save(claim));
+        notificationService.createNotification(
+            claim.getUser(), 
+            NotificationType.CLAIM_APPROVED, 
+        "Claim Approved",
+            "Your claim for '" + claim.getItem().getTitle() + "' has been approved.",
+            claim.getItem().getId(),
+            savedClaim.getId()
+        );
+
+        return toResponse(savedClaim);
     }
 
     @Transactional
@@ -120,9 +143,19 @@ public class ClaimService {
             );
         }
 
-        claim.setStatus(ClaimStatus.REJECTED);
+        Claim savedClaim = claimRepository.save(claim);
 
-        return toResponse(claimRepository.save(claim));
+
+        notificationService.createNotification(
+            claim.getUser(),
+            NotificationType.CLAIM_REJECTED,
+            "Claim Rejected",
+            "Your claim for '" + claim.getItem().getTitle() + "' has been rejected.",
+            claim.getItem().getId(),
+            savedClaim.getId()
+        );
+
+        return toResponse(savedClaim);
     }
 
     private Claim getClaimForReviewer(Long claimId, Long userId) {

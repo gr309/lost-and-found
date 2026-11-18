@@ -8,9 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.learn.lostfound.entity.Notification;
 
-public interface NotificationRepository
-        extends JpaRepository<Notification, Long> {
-
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
     // Get all notifications of a user (newest first)
     List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
 
