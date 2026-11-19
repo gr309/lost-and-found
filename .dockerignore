@@ -3,4 +3,9 @@
 .vscode
 target
 .env
+.env.*
+uploads
+data
 *.log
+
+backups

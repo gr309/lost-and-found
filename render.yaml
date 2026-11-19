@@ -1,0 +1,63 @@
+# Paid services: MySQL and images each require their own persistent disk.
+services:
+  - type: pserv
+    name: lostfound-mysql
+    runtime: image
+    image:
+      url: docker.io/library/mysql:8.4
+    region: singapore
+    plan: 1c-2g
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MYSQL_DATABASE
+        value: lostfound
+      - key: MYSQL_USER
+        value: lostfound
+      - key: MYSQL_PASSWORD
+        generateValue: true
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+  - type: web
+    name: lostfound-api
+    runtime: docker
+    region: singapore
+    plan: 1c-2g
+    healthCheckPath: /health/
+    disk:
+      name: item-images
+      mountPath: /app/uploads
+      sizeGB: 1
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: lostfound-mysql
+          property: host
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        fromService:
+          type: pserv
+          name: lostfound-mysql
+          envVarKey: MYSQL_DATABASE
+      - key: DB_USERNAME
+        fromService:
+          type: pserv
+          name: lostfound-mysql
+          envVarKey: MYSQL_USER
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: lostfound-mysql
+          envVarKey: MYSQL_PASSWORD
+      - key: JWT_SECRET
+        generateValue: true
+      - key: UPLOAD_DIR
+        value: /app/uploads
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false

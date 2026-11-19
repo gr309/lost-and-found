@@ -54,7 +54,7 @@ The platform covers the full lifecycle of a misplaced item: someone reports it, 
 | Security | Spring Security OAuth2 Resource Server + JWT (HS256), PBKDF2 encoder |
 | Build | Maven Wrapper |
 | Container | Docker on Eclipse Temurin 21 |
-| Media | Rapidfile-compatible storage via `RapidfileStorageService` |
+| Media | Local disk via `LocalFileStorageService`; persistent disk on Render |
 
 ---
 
@@ -98,7 +98,7 @@ flowchart LR
     R["📚 Repositories<br/>Spring Data JPA"]
     DB[("🗄️ MySQL")]
     IP["🖼️ ImageProcessor<br/>800×800 JPEG"]
-    RF["☁️ Rapidfile Storage"]
+    RF["Local upload directory / Render persistent disk"]
     NS["🔔 NotificationService"]
 
     C -->|HTTP request| S --> CT --> SV
@@ -142,9 +142,9 @@ flowchart TD
     C -- No --> X[[400 Bad Request]]
     C -- Yes --> D{Image part<br/>included?}
     D -- No --> G
-    D -- Yes --> E{JPG / PNG / WEBP<br/>and within size limit?}
+    D -- Yes --> E{JPG / PNG<br/>and within size limit?}
     E -- No --> X
-    E -- Yes --> F[Resize to 800×800 JPEG<br/>→ upload to Rapidfile<br/>→ get imageUrl]
+    E -- Yes --> F[Resize to 800×800 JPEG<br/>→ save to local disk<br/>→ get imageUrl]
     F --> G[Set current user as reporter]
     G --> H[(Save Item)]
     H --> I[[ItemResponse]]
@@ -276,7 +276,7 @@ erDiagram
 ## 7. Endpoint Catalogue
 
 - **Base URL (local):** `http://localhost:8080`
-- **Trailing slashes matter:** every route below ends with `/` **except** `/api/user/me`.
+- **Trailing slashes matter:** API routes below end with `/` except `/api/user/me`. Health accepts `/health` and `/health/`; image URLs end in `.jpg`.
 - **Auth legend:** 🌍 = no token needed · 🔐 = `Authorization: Bearer <accessToken>` · 👑 = 🔐 and must be the item's reporter
 
 ### System
@@ -284,9 +284,9 @@ erDiagram
 | Verb | Path | Auth | Handler | Description |
 | --- | --- | --- | --- | --- |
 | GET | `/` | 🌍 | `HomeController.home` | Service status. |
-| GET | `/health/` | 🔐* | `HomeController.health` | Returns `{ "status": "UP" }`. |
+| GET | `/health/` (also `/health`) | 🌍 | `HomeController.health` | Returns `{ "status": "UP" }`. |
 
-\* Protected because of a slash mismatch — see [Known Limitations](#12-known-limitations).
+Uploaded JPEGs are public at `/uploads/items/{filename}.jpg`; claim and notification routes require authentication.
 
 ### Authentication & Profile
 
@@ -369,7 +369,7 @@ Notes: `expiresIn` is a human-readable string, not seconds. Passwords never appe
 | `type` | enum | `LOST` or `FOUND` |
 | `location` | string | Mandatory, not blank |
 | `eventDate` | ISO date (`YYYY-MM-DD`) | Mandatory, `@PastOrPresent` |
-| `image` | file part | Create only, optional; JPG/PNG/WEBP; ≤ 5 MB |
+| `image` | file part | Create only, optional; JPG/PNG; ≤ 5 MB and 20 megapixels |
 
 **`ItemResponse`** → `id`, `title`, `description`, `type`, `location`, `eventDate`, `imageUrl`, `createdAt`
 
@@ -450,10 +450,9 @@ Both mark-as-read endpoints reply with `204 No Content` and an empty body.
 | `ItemService` | `createItem`, `getAllItems`, `getItems`, `updateItem`, `deleteItem`, `toResponse` | Item persistence, ownership, mapping. |
 | `ClaimService` | `createClaim`, `getMyClaims`, `approveClaim`, `rejectClaim`, `getClaimForReviewer`, `toResponse` | Claim rules and notification triggers. |
 | `NotificationService` | `createNotification`, `getNotifications`, `getUnreadCount`, `markAsRead`, `markAllAsRead`, `toResponse` | Alert storage and per-user scoping. |
-| `FileStorageService` | `save` | Storage abstraction for uploads. |
-| `RapidfileStorageService` | `save` | Validate → process → upload → return public URL. |
+| `FileStorageService` | `save`, `delete` | Storage abstraction for uploads. |
 | `ImageProcessor` | `process` | Validates, centres on an 800×800 white canvas, JPEG-compresses. |
-| `LocalFileStorageService` | — | Inactive: body commented out, not registered as a bean. |
+| `LocalFileStorageService` | `save`, `delete` | Store processed JPEGs under `UPLOAD_DIR/items`; return relative image URL; clean up after rollback/deletion. |
 
 ### Repositories
 
@@ -480,12 +479,14 @@ Both mark-as-read endpoints reply with `204 No Content` and an empty body.
 ### Image rules
 
 - Optional, and accepted only when creating an item.
-- `RapidfileStorageService`: JPG, PNG, or WEBP, up to **5 MB**.
-- `ImageProcessor`: additionally rejects anything over **10 MB** and always outputs JPEG.
+- JPG or PNG, up to **5 MB** and **20 megapixels**; actual image content is checked before storage.
+- Images become 800×800 JPEGs. WEBP is rejected because the bundled Java image decoder does not support it.
+- `imageUrl` is relative, for example `/uploads/items/uuid.jpg`. Resolve it against the API origin, not the frontend origin.
+- Files are removed after successful item deletion or database transaction rollback. Existing external image URLs remain unchanged.
 
 ### Security rules
 
-- Public: `/`, signup, signin, `GET /api/items/`, `GET /api/items/{id}/`.
+- Public: `/`, `/health`, `/health/`, signup, signin, item GET routes, and image GET/HEAD routes.
 - Everything else requires a valid token.
 - CORS: configured origins; methods `GET POST PUT PATCH DELETE OPTIONS`; headers `Authorization`, `Content-Type`, `Accept`.
 
@@ -516,7 +517,6 @@ These reflect the current code and are listed so consumers are not surprised.
 | # | Issue | Effect | Suggested fix |
 | --- | --- | --- | --- |
 | 1 | `rejectClaim` saves without `claim.setStatus(REJECTED)` | Claim remains `PENDING` while the claimant receives a "rejected" alert | Set the status before `save()` |
-| 2 | Controller maps `/health/`, security allows `/health` | Health check needs a token | Align both paths (or permit both) |
 | 3 | Signup/signin DTOs lack validation annotations and `@Valid` | Null fields may cause runtime errors instead of a clean `400` | Add `@NotBlank`/`@Email` and `@Valid` |
 | 4 | `ITEM_MATCHED`, `ITEM_RESOLVED` unused | Enum values never appear in practice | Implement triggers or remove |
 | 5 | No server-side search | Clients must filter the full list from `GET /api/items/` | Add query parameters / pagination |
@@ -525,58 +525,63 @@ These reflect the current code and are listed so consumers are not surprised.
 
 ## 13. Getting Started
 
-### 13.1 Environment variables
-
-Configuration is read from the environment by `application.properties`. **Never commit real secrets.**
-
-| Variable | Required | Purpose (default) |
-| --- | --- | --- |
-| `DB_URL` | ✅ | JDBC URL, e.g. `jdbc:mysql://localhost:3306/lostfound` |
-| `DB_USERNAME` | ✅ | Database user |
-| `DB_PASSWORD` | ✅ | Database password |
-| `JWT_SECRET` | ✅ | Base64 string that decodes to ≥ 32 bytes |
-| `RAPIDFILE_SECRET_KEY` | ✅ (startup) | Rapidfile upload key |
-| `PORT` | — | HTTP port (`8080`) |
-| `CORS_ALLOWED_ORIGINS` | — | Comma-separated origins (`http://localhost:5173`) |
-| `APP_ENV` | — | Active profile (`dev`) |
-| `APP_DEBUG` | — | Debug toggle (`false`) |
-| `APP_LOG_LEVEL` | — | App log level (`INFO`) |
-| `SQL_DEBUG` | — | Hibernate SQL output (`false`) |
-
-### 13.2 Database
-
-Create a MySQL schema named `lostfound` and a user that can create and alter tables. Tables are managed automatically because Hibernate runs with `spring.jpa.hibernate.ddl-auto=update`.
-
-### 13.3 Run locally
+### 13.1 Local database and image uploads
 
 ```bash
-export DB_URL='jdbc:mysql://localhost:3306/lostfound'
-export DB_USERNAME='lostfound_user'
-export DB_PASSWORD='your-local-password'
-export JWT_SECRET="$(openssl rand -base64 32)"
-export RAPIDFILE_SECRET_KEY='your-rapidfile-key'
-export CORS_ALLOWED_ORIGINS='http://localhost:5173'
-
-./mvnw spring-boot:run
+./scripts/start-local.sh
 ```
 
-### 13.4 Build a JAR
+This generates `.env.local` if it does not exist, starts MySQL 8.4 on localhost port 3307, builds the API, and exposes it at `http://localhost:8080`. It preserves your existing `.env` and existing databases. Docker with Compose and OpenSSL are required. The first build downloads dependencies.
+
+Database records persist in the `lostfound-local_mysql-data` Docker volume. Images persist in `./uploads/items`. Credentials stay in the ignored `.env.local` file. Do not remove the volume or upload directory if you want to keep data.
 
 ```bash
-./mvnw -B -Dmaven.test.skip=true package
-java -jar target/lostfound-0.0.1-SNAPSHOT.jar
+curl http://localhost:8080/health/
+docker compose --env-file .env.local logs -f api
+# Stop services while retaining records and images:
+docker compose --env-file .env.local down
 ```
 
-### 13.5 Docker
-
-The Dockerfile targets Java 21, listens on `0.0.0.0`, and respects `PORT`.
+To run Java directly for IDE development:
 
 ```bash
-docker build -t lostfound .
-docker run --env-file .env -p 8080:8080 lostfound
+./scripts/setup-local.sh
+docker compose --env-file .env.local up -d db
+./scripts/run-local.sh
 ```
 
-Make sure the container can reach both MySQL and Rapidfile. Keep `.env` out of version control.
+Stop the Compose API first if it is already using port 8080. The run script loads `.env.local`; Spring does not automatically load `.env` files. For IDE launch configurations, supply the values from `.env.local` as environment variables.
+
+### 13.2 Configuration
+
+| Variable | Purpose / default |
+| --- | --- |
+| `DB_HOST`, `DB_PORT`, `DB_NAME` | MySQL host (`localhost`), port (`3306`), schema (`lostfound`) |
+| `DB_USERNAME`, `DB_PASSWORD` | Database username (`lostfound`) and required password |
+| `DB_URL` | Optional full JDBC URL; overrides host/port/name |
+| `JWT_SECRET` | Required stable Base64 secret decoding to at least 32 bytes |
+| `UPLOAD_DIR` | Upload root (`./uploads`); images go in its `items` subdirectory |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins (`http://localhost:5173`) |
+| `PORT` | HTTP port (`8080`) |
+| `DDL_AUTO` | Hibernate schema handling (`update`) |
+| `APP_ENV`, `APP_DEBUG`, `APP_LOG_LEVEL`, `SQL_DEBUG` | Profile and logging settings |
+| `MYSQL_ROOT_PASSWORD` | Required only for initializing the Compose MySQL container |
+
+The generated local config uses port 3307 to avoid interfering with an existing MySQL server. To use an existing local database, set the connection values and credentials for that database instead. No Rapidfile key is needed.
+
+### 13.3 Tests and build
+
+```bash
+./mvnw -B verify
+```
+
+Tests use an isolated H2 database and test upload directories under `target/`. The deployable JAR is `target/lostfound-0.0.1-SNAPSHOT.jar`.
+
+### 13.4 Render
+
+Use the included [`render.yaml`](render.yaml) Blueprint. It defines a private MySQL service and a Docker API service, each with a persistent disk. Both are paid services. Set your frontend origin when Render prompts for `CORS_ALLOWED_ORIGINS`.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete deployment, verification, and backup instructions.
 
 ---
 

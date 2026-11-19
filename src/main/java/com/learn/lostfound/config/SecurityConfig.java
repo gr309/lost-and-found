@@ -33,10 +33,12 @@ public class SecurityConfig {
             )
 
             .authorizeHttpRequests(auth -> auth
+                .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
 
                 // Public endpoints
                 .requestMatchers(
                     "/",
+                    "/health",
                     "/health/",
                     "/api/auth/signup/",
                     "/api/auth/signin/"
@@ -47,12 +49,9 @@ public class SecurityConfig {
                     HttpMethod.GET,
                     "/api/items/",
                     "/api/items/**",
-                    "/api/me/", 
-                    "/api/claims/",
-                    "/api/claims/**", 
-                    "/api/notifications/", 
-                    "/api/notifications/**" 
+                    "/uploads/items/*.jpg"
                 ).permitAll()
+                .requestMatchers(HttpMethod.HEAD, "/uploads/items/*.jpg").permitAll()
 
                 // Other endpoints require authentication
                 .anyRequest().authenticated()

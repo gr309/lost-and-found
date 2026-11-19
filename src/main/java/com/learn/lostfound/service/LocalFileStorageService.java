@@ -1,50 +1,47 @@
 package com.learn.lostfound.service;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-public class LocalFileStorageService {
-    
+
+@Service
+public class LocalFileStorageService implements FileStorageService {
+    private static final String URL_PREFIX = "/uploads/items/";
+    private final Path itemsPath;
+    private final ImageProcessor imageProcessor;
+
+    public LocalFileStorageService(@Value("${app.upload-dir}") String uploadDir,
+                                   ImageProcessor imageProcessor) throws IOException {
+        this.itemsPath = Path.of(uploadDir).toAbsolutePath().normalize().resolve("items");
+        this.imageProcessor = imageProcessor;
+        Files.createDirectories(itemsPath);
+    }
+
+    @Override
+    public String save(MultipartFile file) throws IOException {
+        byte[] image = imageProcessor.process(file);
+        String filename = UUID.randomUUID() + ".jpg";
+        Path temporary = Files.createTempFile(itemsPath, ".upload-", ".tmp");
+        try {
+            Files.write(temporary, image);
+            Files.move(temporary, itemsPath.resolve(filename), StandardCopyOption.ATOMIC_MOVE);
+        } finally {
+            Files.deleteIfExists(temporary);
+        }
+        return URL_PREFIX + filename;
+    }
+
+    @Override
+    public void delete(String imageUrl) throws IOException {
+        // Never interpret legacy external URLs or arbitrary paths as local files.
+        if (imageUrl != null && imageUrl.matches(
+                "/uploads/items/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.jpg")) {
+            Files.deleteIfExists(itemsPath.resolve(imageUrl.substring(URL_PREFIX.length())));
+        }
+    }
 }
-
-// @Service 
-// public class LocalFileStorageService implements FileStorageService{
-//     private final Path uploadPath = Paths.get("uploads/items").toAbsolutePath().normalize();
-
-
-//     @Override 
-//     public String save(MultipartFile file) throws IOException {
-//         if(file == null || file.isEmpty()) {
-//             throw new IllegalArgumentException("Image cannot be empty");
-//         }       
-
-//         if(file.getSize() > 5 * 1024 * 1024) {
-//             throw new IllegalArgumentException("Image must be under 5MB"); 
-//         }
-
-//         String contentType = file.getContentType(); 
-
-//         String extention = switch (contentType) {
-//             case "image/jpeg" -> ".jpg";
-//             case "image/png" -> ".png";
-//             case "image/webp" -> ".webp"; 
-            
-//             default -> throw new IllegalArgumentException( "Only JPG, PNG and WEBP are allowed");
-//         };
-        
-
-//         System.out.println("Uploaded filename: " + file.getOriginalFilename());
-//         System.out.println("Content type: " + contentType);
-//         System.out.println("File size: " + file.getSize());
-        
-//         Files.createDirectories(uploadPath); 
-//         String filename = UUID.randomUUID() + extention; 
-//         Path destination = uploadPath.resolve(filename); 
-//         Files.copy(file.getInputStream(), destination); 
-        
-//         return "/uploads/items/" + filename; 
-//     }
-// }

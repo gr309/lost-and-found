@@ -5,6 +5,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriter;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 
@@ -25,22 +29,48 @@ public class ImageProcessor {
 
         // 1. Validate input size
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Image is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image is required");
         }
 
-        if (file.getSize() > 10 * 1024 * 1024) {
-            throw new IllegalArgumentException("Maximum image size is 10MB");
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Maximum image size is 5MB");
+        }
+
+        if (!"image/jpeg".equals(file.getContentType()) && !"image/png".equals(file.getContentType())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only JPG and PNG are allowed");
         }
 
         // 2. Read original image
         BufferedImage original;
 
-        try (InputStream input = file.getInputStream()) {
-            original = ImageIO.read(input);
+        try (InputStream input = file.getInputStream();
+             ImageInputStream imageInput = ImageIO.createImageInputStream(input)) {
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(imageInput);
+            if (!readers.hasNext()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid image");
+            }
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(imageInput, true, true);
+                String format = reader.getFormatName();
+                if (!format.equalsIgnoreCase("JPEG") && !format.equalsIgnoreCase("PNG")) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only JPG and PNG are allowed");
+                }
+                // Check dimensions before allocating a full decoded image.
+                long pixels = (long) reader.getWidth(0) * reader.getHeight(0);
+                if (pixels > 20_000_000) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image must not exceed 20 megapixels");
+                }
+                original = reader.read(0);
+            } finally {
+                reader.dispose();
+            }
+        } catch (javax.imageio.IIOException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid image", ex);
         }
 
         if (original == null) {
-            throw new IllegalArgumentException("Invalid image");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid image");
         }
 
         int originalWidth = original.getWidth();

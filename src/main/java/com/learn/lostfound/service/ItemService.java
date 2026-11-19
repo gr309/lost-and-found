@@ -12,6 +12,8 @@ import com.learn.lostfound.entity.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -58,6 +60,12 @@ public class ItemService {
         if(image != null && !image.isEmpty()) {
             String imageUrl = fileStorageService.save(image);
             item.setImageUrl(imageUrl);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == STATUS_ROLLED_BACK) deleteImageQuietly(imageUrl);
+                }
+            });
         }
 
         Item savedItem = itemRepository.save(item);
@@ -155,6 +163,20 @@ public class ItemService {
         }
 
         itemRepository.delete(item);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                deleteImageQuietly(item.getImageUrl());
+            }
+        });
+    }
+
+    private void deleteImageQuietly(String imageUrl) {
+        try {
+            fileStorageService.delete(imageUrl);
+        } catch (IOException ex) {
+            org.slf4j.LoggerFactory.getLogger(ItemService.class).warn("Unable to remove unused image {}", imageUrl, ex);
+        }
     }
 
 
