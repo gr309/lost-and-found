@@ -579,7 +579,7 @@ Tests use an isolated H2 database and test upload directories under `target/`. T
 
 ### 13.4 Render
 
-Use the included [`render.yaml`](render.yaml) Blueprint. It defines a private MySQL service and a Docker API service, each with a persistent disk. Both are paid services. Set your frontend origin when Render prompts for `CORS_ALLOWED_ORIGINS`.
+Use the included [`render.yaml`](render.yaml) Blueprint. It defines managed PostgreSQL and a Docker API service with a persistent upload disk. Set your frontend origin when Render prompts for `CORS_ALLOWED_ORIGINS`.
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete deployment, verification, and backup instructions.
 

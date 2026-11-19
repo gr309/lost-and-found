@@ -1,6 +1,6 @@
-# MySQL and local image storage
+# Database and local image storage
 
-The backend uses MySQL both locally and on Render. Images are files on the API server; only the image URL is stored in MySQL. No external image-storage API is required.
+The backend uses MySQL locally and managed PostgreSQL on Render. Images are files on the API server; only the image URL is stored in the database. No external image-storage API is required.
 
 ## Local setup
 
@@ -14,10 +14,10 @@ If you prefer an existing local MySQL server, create a `lostfound` schema and a 
 
 1. Push these files to your Git repository.
 2. In Render choose **New → Blueprint**, connect the repository, and select `render.yaml`.
-3. Review the two paid services and their disks before creating them. The Blueprint selects 2 GB RAM per service for MySQL and the Java application; review current pricing in Render.
+3. Review the PostgreSQL database and paid API service before creating them. The API disk requires a paid web-service plan; review current pricing in Render.
 4. Enter `CORS_ALLOWED_ORIGINS`: your frontend origin, such as `https://your-frontend.example`, without a trailing slash. Separate multiple origins with commas.
-5. Deploy. The Blueprint generates database passwords and a stable JWT secret, connects the API to MySQL over Render's private network, and mounts the upload disk.
-6. Wait for MySQL initialization and API startup. If the first API attempt precedes database readiness, redeploy the API once MySQL is ready.
+5. Deploy. The Blueprint generates a stable JWT secret, connects the API to managed PostgreSQL, and mounts the upload disk.
+6. Wait for PostgreSQL initialization and API startup. If the first API attempt precedes database readiness, redeploy the API once PostgreSQL is ready.
 7. Check `https://<api-service>.onrender.com/health/`, then register, sign in, create an item with an image, and open its image URL.
 
 No production deployment is performed by the local setup scripts.
@@ -26,23 +26,23 @@ No production deployment is performed by the local setup scripts.
 
 | Service | Mount path | Stored content |
 | --- | --- | --- |
-| `lostfound-mysql` | `/var/lib/mysql` | MySQL data (10 GB disk) |
+| `lostfound-db` | Render-managed PostgreSQL disk | PostgreSQL data |
 | `lostfound-api` | `/app/uploads` | Images (`UPLOAD_DIR=/app/uploads`, 1 GB disk) |
 
-Render's default filesystem is ephemeral. Free web services cannot attach persistent disks. Keep both disks attached; a local directory without a persistent disk loses uploaded files on restart/redeploy. Disks also limit each service to one instance and prevent zero-downtime deploys. See [Render persistent disks](https://render.com/docs/disks) and [MySQL deployment](https://render.com/docs/deploy-mysql).
+Render's default filesystem is ephemeral. Free web services cannot attach persistent disks. Keep the API disk attached; a local directory without a persistent disk loses uploaded files on restart/redeploy. Disks also limit the service to one instance and prevent zero-downtime deploys. See [Render persistent disks](https://render.com/docs/disks) and [Render Blueprint references](https://render.com/docs/blueprint-spec).
 
 ### Updating an existing Render API service
 
 Either deploy the new Blueprint services or apply the same configuration to your existing service. Do not accidentally create a second production database when you intend to retain the old one.
 
-- Set `DB_HOST` to the private MySQL hostname, `DB_PORT=3306`, `DB_NAME=lostfound`, and the matching `DB_USERNAME` and `DB_PASSWORD`.
+- Set the database variables from the managed PostgreSQL service, or use the Blueprint to create them automatically.
 - Remove a stale `DB_URL` if using these separate variables; `DB_URL` takes precedence. Also remove old `SPRING_DATASOURCE_*` overrides if present.
 - Attach a disk at `/app/uploads` and set `UPLOAD_DIR=/app/uploads`.
 - Keep a valid `JWT_SECRET` stable. Generate a new one with `openssl rand -base64 32` only when needed; changing it invalidates current tokens.
 - Set `CORS_ALLOWED_ORIGINS` and health-check path `/health/`. Render supplies `PORT`.
 - Remove the unused `RAPIDFILE_SECRET_KEY`. Redeploy the API.
 
-The Blueprint uses [Render's documented environment references](https://render.com/docs/blueprint-spec) to supply the private hostname and credentials. MySQL is a custom private service, not Render's managed PostgreSQL product. Keep database and API services in the same region.
+The Blueprint uses [Render's documented environment references](https://render.com/docs/blueprint-spec) to supply the managed PostgreSQL connection. Keep database and API services in the same region.
 
 ## Image API
 
@@ -80,4 +80,4 @@ docker compose --env-file .env.local exec -T db sh -c \
 tar -czf backups/uploads.tar.gz uploads
 ```
 
-Protect backup files: they contain user data. On Render use its shell/SSH access for a MySQL logical dump and copy images from the mounted API disk. A MySQL disk snapshot alone is not a reliable database backup. Never run `docker compose down -v` unless you intentionally want to delete local database data.
+Protect backup files: they contain user data. On Render use PostgreSQL's logical backup tools and copy images from the mounted API disk. A database disk snapshot alone is not a reliable database backup. Never run `docker compose down -v` unless you intentionally want to delete local database data.

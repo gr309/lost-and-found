@@ -1,4 +1,3 @@
-# Build stage
 FROM eclipse-temurin:21-jdk AS build
 
 WORKDIR /app
@@ -20,7 +19,9 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
+COPY docker-entrypoint.sh docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

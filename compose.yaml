@@ -30,6 +30,7 @@ services:
       DB_NAME: ${DB_NAME:-lostfound}
       DB_USERNAME: ${DB_USERNAME:-lostfound}
       DB_PASSWORD: ${DB_PASSWORD:?Run scripts/setup-local.sh first}
+      DB_URL: mysql://db:3306/${DB_NAME:-lostfound}?allowPublicKeyRetrieval=true&connectionTimeZone=UTC
       JWT_SECRET: ${JWT_SECRET:?Run scripts/setup-local.sh first}
       UPLOAD_DIR: /app/uploads
       PORT: 8080
