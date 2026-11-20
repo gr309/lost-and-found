@@ -1,0 +1,61 @@
+# Render deployment: managed PostgreSQL plus the Spring Boot API.
+# The API disk is required because uploads are stored locally by design.
+databases:
+  - name: lostfound-db
+    plan: free
+    region: singapore
+    databaseName: lostfound
+    user: lostfound
+
+services:
+  - type: web
+    name: lostfound-api
+    runtime: docker
+    region: singapore
+    plan: 1c-2g
+    healthCheckPath: /health
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    disk:
+      name: item-images
+      mountPath: /app/uploads
+      sizeGB: 1
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: DB_HOST
+        fromDatabase:
+          name: lostfound-db
+          property: host
+      - key: DB_URL
+        fromDatabase:
+          name: lostfound-db
+          property: connectionString
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lostfound-db
+          property: connectionString
+      - key: DB_PORT
+        fromDatabase:
+          name: lostfound-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: lostfound-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: lostfound-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: lostfound-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: UPLOAD_DIR
+        value: /app/uploads
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: DDL_AUTO
+        value: update
