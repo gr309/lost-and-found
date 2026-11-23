@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.learn.lostfound.dto.AuthRequest;
-import com.learn.lostfound.dto.AuthResponse;
+import com.learn.lostfound.dto.Auth;
 import com.learn.lostfound.service.UserService;
 
 
@@ -25,17 +24,17 @@ public class UserController {
     }
 
     @PostMapping("auth/signup/")
-    public ResponseEntity<AuthResponse.UserInfo> signup(@RequestBody AuthRequest.Signup request) {
+    public ResponseEntity<Auth.Response.UserInfo> signup(@RequestBody Auth.Request.Signup request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.signup(request));
     }
     
     @PostMapping("auth/signin/")
-    public ResponseEntity<AuthResponse.Signin> signin(@RequestBody AuthRequest.Signin request) {
+    public ResponseEntity<Auth.Response.Signin> signin(@RequestBody Auth.Request.Signin request) {
         return ResponseEntity.ok(userService.signin(request));
     }
 
-    @GetMapping("/user/me")
-    public ResponseEntity<AuthResponse.UserInfo> me(@AuthenticationPrincipal Jwt jwt) {
+    @GetMapping("me/")
+    public ResponseEntity<Auth.Response.UserInfo> me(@AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getSubject()); 
 
         return ResponseEntity.ok(userService.getUserById(userId));

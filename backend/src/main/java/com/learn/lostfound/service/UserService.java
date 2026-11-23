@@ -8,11 +8,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.learn.lostfound.dto.AuthRequest;
-import com.learn.lostfound.dto.AuthResponse;
+import com.learn.lostfound.dto.Auth;
+
 import com.learn.lostfound.entity.User;
 import com.learn.lostfound.repository.UserRepository;
-// import com.learn.lostfound.service.JwtService;
 
 @Service
 public class UserService {
@@ -26,7 +25,7 @@ public class UserService {
         this.jwtService = jwtService;         
     }
 
-    public AuthResponse.UserInfo signup(AuthRequest.Signup request) {
+    public Auth.Response.UserInfo signup(Auth.Request.Signup request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
 
         if(userRepository.existsByEmail(email)) {
@@ -44,10 +43,15 @@ public class UserService {
 
         try {
             User savedUser = userRepository.saveAndFlush(user); 
-            return new AuthResponse.UserInfo(
+            return new Auth.Response.UserInfo(
                 savedUser.getId(), 
                 savedUser.getName(), 
-                savedUser.getEmail()
+                savedUser.getEmail(), 
+                savedUser.getPhone(), 
+                savedUser.getRole().name(),
+                savedUser.getStatus().name(),
+                savedUser.getCreatedAt(),
+                savedUser.getUpdatedAt()
             ); 
         }
         catch (DataIntegrityViolationException exception) {
@@ -63,7 +67,7 @@ public class UserService {
 
     }
 
-    public AuthResponse.Signin signin(AuthRequest.Signin request) {
+    public Auth.Response.Signin signin(Auth.Request.Signin request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
 
         User user = userRepository.findByEmail(email)
@@ -82,10 +86,10 @@ public class UserService {
         }
 
         String token = jwtService.generateToken(user); 
-        return new AuthResponse.Signin(token, "Bearer", "30 days"); 
+        return new Auth.Response.Signin(user.getId(),  token); 
     }
 
-    public AuthResponse.UserInfo getUserById(Long id) {
+    public Auth.Response.UserInfo getUserById(Long id) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> 
                 new ResponseStatusException(
@@ -94,10 +98,15 @@ public class UserService {
                 )
         );
 
-        return new AuthResponse.UserInfo(
+        return new Auth.Response.UserInfo(
             user.getId(), 
             user.getName(), 
-            user.getEmail()
+            user.getEmail(), 
+            user.getPhone(), 
+            user.getRole().name(),
+            user.getStatus().name(),
+            user.getCreatedAt(),
+            user.getUpdatedAt()
         );
 
     }

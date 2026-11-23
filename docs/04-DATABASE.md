@@ -1,4 +1,3 @@
-
 # Database Design
 
 **Project:** Lost & Found Bangladesh
