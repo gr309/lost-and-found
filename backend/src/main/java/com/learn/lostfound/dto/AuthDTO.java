@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.NotBlank;
 
-public final class Auth {
-    private Auth() {}
+public final class AuthDTO {
+    private AuthDTO() {}
     
     public static final class Request {
         private Request(){}

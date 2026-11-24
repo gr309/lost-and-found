@@ -10,56 +10,56 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import com.learn.lostfound.dto.NotificationResponse;
-import com.learn.lostfound.service.NotificationService;
+// import com.learn.lostfound.service.NotificationService;
 
-@RestController
-@RequestMapping("/api/notifications/")
-public class NotificationController {
+// @RestController
+// @RequestMapping("/api/notifications/")
+// public class NotificationController {
 
-    private final NotificationService notificationService;
+//     private final NotificationService notificationService;
 
-    public NotificationController(NotificationService notificationService) {
-        this.notificationService = notificationService;
-    }
+//     public NotificationController(NotificationService notificationService) {
+//         this.notificationService = notificationService;
+//     }
 
-    // Get all notifications of logged-in user
-    @GetMapping("/")
-    public ResponseEntity<List<NotificationResponse>> getNotifications(@AuthenticationPrincipal Jwt jwt) {
-        Long userId = Long.valueOf(jwt.getSubject());
+//     // Get all notifications of logged-in user
+//     @GetMapping("/")
+//     public ResponseEntity<List<NotificationResponse>> getNotifications(@AuthenticationPrincipal Jwt jwt) {
+//         Long userId = Long.valueOf(jwt.getSubject());
 
-        return ResponseEntity.ok(notificationService.getNotifications(userId));
-    }
+//         return ResponseEntity.ok(notificationService.getNotifications(userId));
+//     }
 
-    // Get unread notification count
-    @GetMapping("/unread-count/")
-    public ResponseEntity<Map<String, Long>> getUnreadCount(@AuthenticationPrincipal Jwt jwt) {
+//     // Get unread notification count
+//     @GetMapping("/unread-count/")
+//     public ResponseEntity<Map<String, Long>> getUnreadCount(@AuthenticationPrincipal Jwt jwt) {
 
-        Long userId = Long.valueOf(jwt.getSubject());
+//         Long userId = Long.valueOf(jwt.getSubject());
 
-        long count = notificationService.getUnreadCount(userId);
+//         long count = notificationService.getUnreadCount(userId);
 
-        return ResponseEntity.ok(Map.of("unreadCount", count));
-    }
+//         return ResponseEntity.ok(Map.of("unreadCount", count));
+//     }
 
-    // Mark a notification as read
-    @PatchMapping("/{id}/read/")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+//     // Mark a notification as read
+//     @PatchMapping("/{id}/read/")
+//     public ResponseEntity<Void> markAsRead(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
 
-        Long userId = Long.valueOf(jwt.getSubject());
+//         Long userId = Long.valueOf(jwt.getSubject());
 
-        notificationService.markAsRead(id, userId);
+//         notificationService.markAsRead(id, userId);
 
-        return ResponseEntity.noContent().build();
-    }
+//         return ResponseEntity.noContent().build();
+//     }
 
-    // Mark all notifications as read
-    @PatchMapping("/read-all/")
-    public ResponseEntity<Void> markAllAsRead(@AuthenticationPrincipal Jwt jwt) {
+//     // Mark all notifications as read
+//     @PatchMapping("/read-all/")
+//     public ResponseEntity<Void> markAllAsRead(@AuthenticationPrincipal Jwt jwt) {
 
-        Long userId = Long.valueOf(jwt.getSubject());
+//         Long userId = Long.valueOf(jwt.getSubject());
 
-        notificationService.markAllAsRead(userId);
+//         notificationService.markAllAsRead(userId);
 
-        return ResponseEntity.noContent().build();
-    }
-}
+//         return ResponseEntity.noContent().build();
+//     }
+// }

@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.learn.lostfound.dto.Auth;
+import com.learn.lostfound.dto.AuthDTO;
 
 import com.learn.lostfound.entity.User;
 import com.learn.lostfound.repository.UserRepository;
@@ -25,7 +25,7 @@ public class UserService {
         this.jwtService = jwtService;         
     }
 
-    public Auth.Response.UserInfo signup(Auth.Request.Signup request) {
+    public AuthDTO.Response.UserInfo signup(AuthDTO.Request.Signup request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
 
         if(userRepository.existsByEmail(email)) {
@@ -43,7 +43,7 @@ public class UserService {
 
         try {
             User savedUser = userRepository.saveAndFlush(user); 
-            return new Auth.Response.UserInfo(
+            return new AuthDTO.Response.UserInfo(
                 savedUser.getId(), 
                 savedUser.getName(), 
                 savedUser.getEmail(), 
@@ -67,7 +67,7 @@ public class UserService {
 
     }
 
-    public Auth.Response.Signin signin(Auth.Request.Signin request) {
+    public AuthDTO.Response.Signin signin(AuthDTO.Request.Signin request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
 
         User user = userRepository.findByEmail(email)
@@ -86,10 +86,10 @@ public class UserService {
         }
 
         String token = jwtService.generateToken(user); 
-        return new Auth.Response.Signin(user.getId(),  token); 
+        return new AuthDTO.Response.Signin(user.getId(),  token); 
     }
 
-    public Auth.Response.UserInfo getUserById(Long id) {
+    public AuthDTO.Response.UserInfo getUserById(Long id) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> 
                 new ResponseStatusException(
@@ -98,7 +98,7 @@ public class UserService {
                 )
         );
 
-        return new Auth.Response.UserInfo(
+        return new AuthDTO.Response.UserInfo(
             user.getId(), 
             user.getName(), 
             user.getEmail(), 

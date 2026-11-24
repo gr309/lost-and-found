@@ -68,13 +68,13 @@ Passwords must be stored as secure hashes.
 
 Stores item categories.
 
-| Column    | Type         | Constraint                |
-| --------- | ------------ | ------------------------- |
-| id        | BIGINT       | PK                        |
-| name      | VARCHAR(100) | NOT NULL                  |
-| slug      | VARCHAR(120) | UNIQUE                    |
-| parent_id | BIGINT       | FK → categories.id, NULL |
-| is_active | BOOLEAN      | NOT NULL                  |
+| Column    | Type         | Constraint |
+| --------- | ------------ | ---------- |
+| id        | BIGINT       | PK         |
+| name      | VARCHAR(100) | NOT NULL   |
+| parent_id      | BIGINT | FK → categories.id, NULL   |
+| slug      | VARCHAR(120) | UNIQUE     |
+| is_active | BOOLEAN      | NOT NULL   |
 
 Supports hierarchical categories.
 
@@ -82,20 +82,24 @@ Supports hierarchical categories.
 
 Stores lost and found reports.
 
-| Column      | Type         | Constraint          |
-| ----------- | ------------ | ------------------- |
-| id          | BIGINT       | PK                  |
-| reporter_id | BIGINT       | FK → users.id      |
-| category_id | BIGINT       | FK → categories.id |
-| type        | VARCHAR(10)  | NOT NULL            |
-| title       | VARCHAR(200) | NOT NULL            |
-| description | TEXT         | NOT NULL            |
-| status      | VARCHAR(30)  | NOT NULL            |
-| event_date  | DATE         | NOT NULL            |
-| time_from   | TIME         | NULL                |
-| time_to     | TIME         | NULL                |
-| created_at  | DATETIME     | NOT NULL            |
-| updated_at  | DATETIME     | NOT NULL            |
+| Column              | Type         | Constraint          |
+| ------------------- | ------------ | ------------------- |
+| id                  | BIGINT       | PK                  |
+| reporter_id         | BIGINT       | FK → users.id      |
+| category_id         | BIGINT       | FK → categories.id |
+| type                | VARCHAR(10)  | NOT NULL            |
+| title               | VARCHAR(200) | NOT NULL            |
+| description         | TEXT         | NOT NULL            |
+| private_description | TEXT         | NOT NULL            |
+| status              | VARCHAR(30)  | NOT NULL            |
+| event_date          | DATE         | NOT NULL            |
+| event_time          | TIME         | NULL                |
+| time_margin_minutes | INT          | NULL                |
+| created_at          | DATETIME     | NOT NULL            |
+| updated_at          | DATETIME     | NOT NULL            |
+
+| parent_id | BIGINT | FK → categories.id, NULL |
+| --------- | ------ | ------------------------- |
 
 **Type:** `LOST`, `FOUND`
 

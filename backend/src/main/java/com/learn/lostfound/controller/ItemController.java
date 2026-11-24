@@ -4,33 +4,20 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.DeleteMapping; 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.*; 
 
-import com.learn.lostfound.dto.ItemRequest;
-import com.learn.lostfound.dto.ItemResponse;
+import com.learn.lostfound.dto.ItemDTO;
 import com.learn.lostfound.service.ItemService;
-import org.springframework.http.MediaType;
-
 
 import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/items/")
 public class ItemController {
-
     private final ItemService itemService;
 
     public ItemController(ItemService itemService) {
@@ -38,62 +25,68 @@ public class ItemController {
     }
 
     @GetMapping("/")
-    public List<ItemResponse> getItems() {
+    public List<ItemDTO.Response.Summary> getItems() {
         return itemService.getAllItems();
     }
 
     @GetMapping("{id}/")
-    public ItemResponse getItem(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
-        return itemService.getItems(id);
+    public ResponseEntity<?> getItem(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        Long userId = ((jwt != null) ? Long.valueOf(jwt.getSubject()): null);
+        return ResponseEntity.ok(itemService.getItem(id, userId));
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
-    public ItemResponse createItem(
-            @Valid @ModelAttribute ItemRequest request,
-            @RequestPart(value = "image", required = false) MultipartFile image,
+    public ItemDTO.Response.OwnerDetail createItem(
+            @Valid @RequestBody ItemDTO.Request.Save request,
             @AuthenticationPrincipal Jwt jwt
     ) throws IOException {
 
         Long userId = Long.valueOf(jwt.getSubject());
-        return itemService.createItem(request, image, userId);
+        return itemService.createItem(request, userId);
     }
-
-
-    // @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    // @ResponseStatus(HttpStatus.CREATED)
-    // public ItemResponse createItem(
-    //         @Valid @RequestPart("data") ItemRequest request,
-    //         @RequestPart(value = "image", required = false)
-    //         MultipartFile image,
-    //         @AuthenticationPrincipal Jwt jwt
-    // ) throws IOException {
-
-    //     Long userId = Long.valueOf(jwt.getSubject());
-    //     return itemService.createItem(request, image, userId);
-    // }
-
-
-    // @PostMapping("/")
-    // @ResponseStatus(HttpStatus.CREATED)
-    // public ItemResponse createItem(@Valid @RequestBody ItemRequest request, @AuthenticationPrincipal Jwt jwt) {
-    //     Long userId = Long.valueOf(jwt.getSubject()); 
-    //     return itemService.createItem(request, userId);
-    // }
-
+    
     @PutMapping("{id}/")
-    public ItemResponse updatedItem(@PathVariable Long id, @Valid @RequestBody ItemRequest request, @AuthenticationPrincipal Jwt jwt) {
+    public ItemDTO.Response.OwnerDetail updatedItem(
+        @PathVariable Long id, 
+        @Valid @RequestBody ItemDTO.Request.Save request, 
+        @AuthenticationPrincipal Jwt jwt
+    ) {
         Long userId = Long.valueOf(jwt.getSubject());
 
         return itemService.updateItem(id, request, userId); 
     }
 
-    @DeleteMapping ("{id}/")
-    @ResponseStatus (HttpStatus.NO_CONTENT)
-    public void deleteItem(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
-        Long userId = Long.valueOf(jwt.getSubject()); 
-        itemService.deleteItem(id, userId);
 
+    @PostMapping("{id}/location/")
+    @ResponseStatus (HttpStatus.CREATED)
+    public Object createLocation(
+        @RequestBody ItemDTO.Request.Location request, 
+        @PathVariable Long id,  
+        @AuthenticationPrincipal Jwt jwt) {
+
+        Long userId = Long.valueOf(jwt.getSubject()); 
+        
+
+        return itemService.createLocation(id, request, userId); 
+    }
+    @PutMapping ("{id}/location/")
+    public Object updateLocation(
+        @RequestBody ItemDTO.Request.Location request, 
+        @PathVariable Long id,  
+        @AuthenticationPrincipal Jwt jwt) {
+
+        Long userId = Long.valueOf(jwt.getSubject()); 
+        
+        return itemService.createLocation(id, request, userId); 
     }
 
+    @PostMapping("{id}/images/")
+    public Object addImage(
+        @PathVariable Long id
+    ) {
+
+
+        return null;
+    }
 }
